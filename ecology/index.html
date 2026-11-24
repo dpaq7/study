@@ -1,0 +1,562 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><style>body{margin:0}[hidden]{display:none!important}img{max-width:100%}</style>
+<title>Ecology Field Notes</title>
+<meta name="robots" content="noindex">
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Layout: one phone-width column. A lesson menu leads to a drill where a single question fills the screen; notes and flashcards sit behind the menu. */
+:root{
+  --bg:#f2f2f7; --surface:#ffffff; --ink:#14261f; --text:#000000; --muted:#6b6b70; --line:#dcdce2;
+  --btn:#14261f; --btn-ink:#ffffff; --tint:#e3ece7;
+  --good:#1c7a43; --good-ink:#0c5a2c; --good-bg:#dcf3e3; --bad:#b3372f; --bad-ink:#96251d; --bad-bg:#fbe1df; --sun:#a86a12;
+  --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","Inter","Segoe UI",system-ui,sans-serif;
+  --slide:cubic-bezier(.3,.75,.1,1);
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#0d1210; --surface:#1a211e; --ink:#e6efe9; --text:#f3f6f4; --muted:#98a39d; --line:#2a3430;
+  --btn:#e6efe9; --btn-ink:#0d1210; --tint:#1f2b26;
+  --good:#5fcf8a; --good-ink:#8fe0ad; --good-bg:#16382a; --bad:#f08a80; --bad-ink:#f6a69e; --bad-bg:#3d1f1c; --sun:#e0a84a; color-scheme:dark } }
+:root[data-theme="dark"]{
+  --bg:#0d1210; --surface:#1a211e; --ink:#e6efe9; --text:#f3f6f4; --muted:#98a39d; --line:#2a3430;
+  --btn:#e6efe9; --btn-ink:#0d1210; --tint:#1f2b26;
+  --good:#5fcf8a; --good-ink:#8fe0ad; --good-bg:#16382a; --bad:#f08a80; --bad-ink:#f6a69e; --bad-bg:#3d1f1c; --sun:#e0a84a; color-scheme:dark }
+
+*{box-sizing:border-box}
+html,body{height:100%}
+body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:17px;line-height:1.45;-webkit-tap-highlight-color:transparent}
+button{font:inherit;color:inherit;border:0;background:none;padding:0;cursor:pointer;text-align:left}
+button:focus-visible,summary:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
+#app{max-width:480px;min-height:100%;margin:0 auto;display:flex;flex-direction:column;padding-left:max(20px,env(safe-area-inset-left,0px));padding-right:max(20px,env(safe-area-inset-right,0px));padding-block:20px 24px}
+.grow{flex:1}
+
+/* Shared pieces */
+.head{display:grid;gap:12px;padding-bottom:20px}
+.head .r{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:32px}
+.head .name{font-weight:600;color:var(--ink);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.head .count{color:var(--muted);font-size:15px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.x{flex:none;width:32px;height:32px;border-radius:50%;background:var(--surface);display:grid;place-items:center;color:var(--muted)}
+.meter{height:6px;border-radius:3px;background:var(--line);overflow:hidden}
+.meter i{display:block;height:100%;border-radius:3px;background:var(--ink);transition:width .45s var(--slide)}
+.big{font-size:22px;font-weight:700;letter-spacing:-.01em;line-height:28px;text-wrap:balance;margin:0}
+.rows{display:grid;gap:10px}
+.row{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:56px;width:100%;padding:12px 16px 12px 18px;border-radius:16px;background:var(--surface);font-weight:500;transition:background-color .25s ease,color .25s ease,opacity .25s ease,transform .12s ease}
+.row .sub{color:var(--muted);font-size:15px;font-weight:400;white-space:nowrap;font-variant-numeric:tabular-nums}
+.row .lab{min-width:0}
+button.row:active{transform:scale(.985)}
+.row[aria-pressed="true"]{background:var(--tint);color:var(--ink);font-weight:600}
+.mark{flex:none;width:22px;height:22px;display:grid;place-items:center}
+.btn{display:grid;place-items:center;width:100%;min-height:54px;padding:10px 16px;border-radius:16px;background:var(--btn);color:var(--btn-ink);font-weight:600;text-align:center;transition:opacity .3s ease,transform .12s ease}
+.btn:active{transform:scale(.98)}
+.btn[disabled]{opacity:.28;cursor:default}
+.btn.quiet{background:var(--surface);color:var(--ink)}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stack{display:grid;gap:14px}
+.label{color:var(--muted);font-size:15px;font-weight:500;margin:0}
+.note{font-size:13px;color:var(--muted);margin:0}
+
+/* Home */
+.title{font-size:34px;font-weight:700;letter-spacing:-.02em;line-height:41px;margin:0;color:var(--text)}
+.kicker{color:var(--muted);font-size:15px;margin:0 0 2px}
+.dock{position:sticky;bottom:0;display:grid;gap:10px;padding-block:14px calc(14px + env(safe-area-inset-bottom,0px));margin-top:14px;background:linear-gradient(to bottom,transparent,var(--bg) 22%)}
+
+/* Drill */
+.screen{display:grid;gap:14px}
+.ask{display:flex;align-items:flex-end;min-height:84px}
+.opt[data-state="right"]{background:var(--good-bg);color:var(--good-ink)}
+.opt[data-state="wrong"]{background:var(--bad-bg);color:var(--bad-ink)}
+.opt[data-state="rest"]{opacity:.5}
+.opt[disabled]{cursor:default}
+.opt[disabled]:active{transform:none}
+.opt .mark{opacity:0;transition:opacity .2s ease}
+.opt[data-state="right"] .mark,.opt[data-state="wrong"] .mark{opacity:1}
+.why{display:grid;grid-template-rows:0fr;transition:grid-template-rows .35s var(--slide)}
+.why[data-open]{grid-template-rows:1fr}
+.why>div{overflow:hidden;min-height:0}
+.why p{margin:0;padding:2px 4px 0;font-size:15px;line-height:20px;color:var(--muted)}
+.why b{font-weight:600;color:var(--good-ink)}
+.why[data-tone="miss"] b{color:var(--bad-ink)}
+
+/* Result */
+.score{display:flex;align-items:baseline;justify-content:center;gap:10px;padding-block:28px 8px;color:var(--ink)}
+.score .n{font-size:96px;font-weight:700;letter-spacing:-.03em;line-height:100px;font-variant-numeric:tabular-nums}
+.score .of{color:var(--muted);font-size:22px;font-weight:600}
+.center{text-align:center}
+.again{align-items:flex-start;flex-direction:column;gap:4px}
+.again .q{font-size:15px;color:var(--muted);font-weight:400}
+.again .a{color:var(--good-ink);font-weight:600}
+
+/* Flashcards */
+.card{display:flex;flex-direction:column;justify-content:center;gap:12px;width:100%;min-height:300px;padding:26px 22px;border-radius:22px;background:var(--surface)}
+.card .side{font-size:13px;color:var(--muted);font-weight:500}
+.card .term{font-size:30px;font-weight:700;letter-spacing:-.02em;line-height:34px;text-wrap:balance}
+.card .ex{color:var(--muted);font-size:15px}
+.card .ex b{color:var(--text);font-weight:600}
+.btn.good{background:var(--good-bg);color:var(--good-ink)}
+.btn.bad{background:var(--bad-bg);color:var(--bad-ink)}
+
+/* Notes */
+.lesson{display:grid;gap:10px}
+.lesson+.lesson{margin-top:28px}
+.lesson .num{color:var(--muted);font-size:13px;font-weight:600;letter-spacing:.06em;text-transform:uppercase}
+.lesson ul{margin:0;padding:6px 18px 6px 34px;border-radius:16px;background:var(--surface);display:grid;gap:10px;font-size:16px}
+.lesson li{padding-block:4px}
+b.k{font-weight:700}
+.eq{display:block;margin-top:8px;padding:8px 12px;border-radius:10px;background:var(--tint);color:var(--ink);font-weight:600;font-size:15px}
+details{border-radius:16px;background:var(--surface)}
+summary{cursor:pointer;padding:16px 18px;font-weight:600;border-radius:16px}
+dl{margin:0;padding:0 18px 16px;display:grid;gap:12px;font-size:16px}
+dt{font-weight:700}
+dd{margin:0;color:var(--muted)}
+dd i{font-style:normal;color:var(--text)}
+figure{margin:0;padding:16px;border-radius:16px;background:var(--surface)}
+figcaption{font-size:13px;color:var(--muted);margin-top:10px}
+.pyr{display:flex;flex-direction:column;gap:5px;align-items:center}
+.pyr .prow{display:flex;flex-direction:column;align-items:center;width:100%;gap:2px}
+.pyr .blk{background:var(--ink);color:var(--bg);border-radius:8px;padding:7px 8px;text-align:center;font-weight:600;font-size:13px;line-height:1.25;min-width:0}
+.pyr .sunrow .blk{background:var(--sun)}
+.pyr .tr{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.tw{overflow-x:auto;border-radius:16px;background:var(--surface);padding:6px 8px}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:last-child td{border-bottom:0}
+th{font-size:12px;color:var(--muted);font-weight:600}
+td.sg{font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
+
+@media (prefers-reduced-motion:no-preference){
+  .enter{animation:enter .5s var(--slide) both}
+  .enter.back{animation-name:enterback}
+  @keyframes enter{from{opacity:0;transform:translateX(16px)}to{opacity:1;transform:none}}
+  @keyframes enterback{from{opacity:0;transform:translateX(-16px)}to{opacity:1;transform:none}}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div id="app"></div>
+
+<script>
+const LESSONS=[null,
+ "Ecosystems & energy flow","Population dynamics","Introduced & invasive species","Biogeochemical processes",
+ "Water & ecosystems","Nitrogen cycle & soil","Global warming & greenhouse gases","Climate change, human impact & succession",
+ "Extension: statistics in biology"];
+
+/* ---------- Review notes ---------- */
+const NOTES={
+1:[`Life on Earth needs <b class="k">energy, liquid water and food</b>. Earth has four spheres: atmosphere (gases), hydrosphere (water), lithosphere (rock and soil) and biosphere (living things).`,
+ `Levels of organization: a <b class="k">population</b> is one species in an area. A <b class="k">community</b> is all the populations together. An <b class="k">ecosystem</b> is the community plus its non-living environment. A <b class="k">biome</b> is a collection of ecosystems with similar abiotic factors.`,
+ `<b class="k">Biotic</b> factors are organisms, their remains and things from their activities (nests, products, waste). <b class="k">Abiotic</b> factors are physical and chemical parts such as temperature, wind, water, minerals and air. Some things are hard to classify (coral reef vs. coral sand), so be ready to <b class="k">justify</b> your choice.`,
+ `Abiotic factors decide where land biomes are found. For a given temperature and rainfall pattern, one type of natural ecosystem is likely to develop.`,
+ `<b class="k">Biodiversity</b> covers ecosystem, species and genetic diversity. A highly biodiverse environment is very stable. Natural ecosystems are usually <b class="k">sustainable</b>. Artificial ones need human management.`,
+ `Only about <b class="k">10%</b> of energy passes to the next trophic level. The rest is used to live (moving, keeping warm), lost in waste, or sits in parts that are not eaten. That is why pyramids usually stop at four or five levels and why top carnivores are few.`,
+ `A <b class="k">pyramid of numbers</b> can look upside down (2 oak trees feed 1000 caterpillars). A <b class="k">pyramid of biomass</b> can too (40 g/m² of phytoplankton support 210 g/m² of zooplankton because phytoplankton reproduce so fast). A <b class="k">pyramid of energy</b> gives the most accurate picture. Decomposers are missing from all of these pyramids.`],
+2:[`A <b class="k">limiting factor</b> limits how much a population can grow. <b class="k">Density-dependent</b> factors get stronger as the population grows (competition, disease, predation). <b class="k">Density-independent</b> factors do not depend on population size (natural disasters, climate change).`,
+ `<b class="k">Carrying capacity</b> is the largest population an ecosystem can sustain. It depends on many biotic and abiotic factors.`,
+ `If populations do not change much over time, the ecosystem is in <b class="k">equilibrium</b>. Changing one population ripples through the others. More rabbits means less grass at first, and more food for snakes and hawks.`,
+ `Yellowstone: with wolves removed, elk had no predator, so elk increased and browsed more aspen, and the trees declined. When wolves were reintroduced in 1995, elk dropped and the trees recovered. The limiting factor for elk changed from food to predation.`,
+ `In a <b class="k">food web</b>, arrows point from the organism being eaten to the organism that eats it. They show the direction energy flows.`,
+ `An <b class="k">ecological niche</b> is the role an organism holds: its habitat, activity pattern, the resources it uses and how it interacts with other species.`],
+3:[`<b class="k">Native</b> species arrived by natural processes and have been established a long time. <b class="k">Endemic</b> species are found in only one area.`,
+ `<b class="k">Introduced</b> species were moved beyond their native range by people, by accident or on purpose. If they settle in without causing harm they are <b class="k">naturalized</b>. If they spread on their own and cause environmental or economic harm they are <b class="k">invasive</b>.`,
+ `Case study: the fungus <b class="k">Bd</b> has caused declines in 501 amphibian species, and at least 90 are presumed extinct. It probably started on the Korean Peninsula and spread through the international pet trade.`,
+ `Bd is <b class="k">native</b> in Asia, so it is not invasive there. Amphibians in Korea have lived with it for a long time, and <b class="k">natural selection</b> favoured resistant animals. Frogs elsewhere never had that chance, so they are vulnerable.`,
+ `New Guinea is a special worry because many of its amphibians are <b class="k">endemic</b>. If they are wiped out there, they are gone everywhere.`,
+ `Losing frogs changes whole ecosystems. Without tadpoles eating algae, blooms may choke streams. Without frogs eating insects, some disease-carrying insects may become more common. Predators of frogs must find other food.`,
+ `Climate change is an important factor in the spread of invasive species.`],
+4:[`<b class="k">Photosynthesis</b> stores the Sun's energy in glucose. Glucose is also the main building material of a plant.<span class="eq">carbon dioxide + water + light energy → glucose + oxygen</span>`,
+ `<b class="k">Cellular respiration</b> releases that energy to power cells.<span class="eq">glucose + oxygen → carbon dioxide + water + energy</span>`,
+ `The two processes are complementary. The outputs of one are the inputs of the other, so carbon and oxygen keep cycling between plants, animals and the air.`,
+ `Atmospheric CO₂ drops in spring and summer because plants are growing and photosynthesis is strong. It is higher in winter, when there is less photosynthesis but respiration and combustion continue. This is the Earth "breathing".`,
+ `Carbon enters the atmosphere in two ways: <b class="k">respiration</b> and <b class="k">combustion</b>. It leaves through photosynthesis by plants.`,
+ `Decomposers (fungi, bacteria, worms) break down wastes and dead organisms so their components can be used again.`,
+ `A <b class="k">carbon sink</b> is long-term carbon storage: coal, oil, peat and natural gas, together called fossil fuels. Burning them puts stored carbon back into the atmosphere as CO₂. Reforestation helps because it increases photosynthesis and stores carbon in trees.`],
+5:[`Liquid water becomes water vapour by <b class="k">evaporation</b> and <b class="k">transpiration</b>. Cellular respiration is the chemical process that produces water.`,
+ `<b class="k">Percolation</b> carries water down through soil to become groundwater. Large collections are <b class="k">aquifers</b>. To keep an aquifer from shrinking, water taken out must be balanced by water percolating in.`,
+ `<b class="k">Surface runoff</b> flows over the surface instead of soaking in. It can wash away thin soil and carry fertilizer from fields into lakes and rivers.`,
+ `Algal bloom chain: extra nutrients and summer sunlight → algae multiply → algae die → decomposer population grows → decomposers use up dissolved oxygen through cellular respiration → fish die.`,
+ `Dissolved oxygen rises and falls every day. Photosynthesis by aquatic plants and algae adds oxygen while the Sun is up.`,
+ `<b class="k">Bioaccumulation</b> happens in one organism over its lifetime. <b class="k">Biomagnification</b> happens up a food chain. That is how fish at Grassy Narrows can hold more mercury than the water they live in.`,
+ `<b class="k">Water quality</b> is judged against a baseline using temperature, water clarity, conductivity, pH and dissolved oxygen. <b class="k">Turbidity</b> measures cloudiness.`],
+6:[`Plants and animals both need nitrogen, but neither can absorb nitrogen from the air. Plants take <b class="k">nitrates</b> or <b class="k">ammonium ions</b> from the soil. Animals get nitrogen by digesting plants or other animals.`,
+ `Atmospheric nitrogen becomes nitrates in one step by <b class="k">lightning</b>, or in two steps: <b class="k">nitrogen fixation</b> by nitrogen-fixing bacteria, then <b class="k">nitrification</b> by nitrifying bacteria.`,
+ `Decomposers break down plant and animal waste to make <b class="k">ammonia</b>, which reacts to form ammonium ions that plants can absorb.`,
+ `<b class="k">Assimilation</b>: plants absorb nitrates and ammonium ions and build proteins and DNA. This is how nitrogen enters the food chain.`,
+ `<b class="k">Denitrification</b>: denitrifying bacteria turn nitrates in the soil back into atmospheric nitrogen.`,
+ `<b class="k">Soil health</b> is the soil's capacity to function: to infiltrate water and cycle nutrients. Plants need 16 nutrient elements, and 13 come from minerals. Nitrogen gives greener leaves, faster growth and higher yields. Phosphorus gives strong roots and resistance to insects and disease.`,
+ `Soil pH is critical. High pH decreases the nutrient ions available to plants. To improve soil: disturb it less and keep it covered with residue or mulch, build biomass naturally for decomposers, and grow more native plants.`],
+7:[`The <b class="k">greenhouse effect</b> is the atmosphere insulating the planet. Sunlight is absorbed by the Earth, much of it bounces back as heat, and greenhouse gases trap that heat and send it back down, like a blanket.`,
+ `With natural levels of greenhouse gases, Earth averages <b class="k">14°C</b> instead of a freezing <b class="k">−19°C</b>. We need the blanket. Humans are making it too thick, so the Earth warms.`,
+ `<b class="k">Greenhouse gases</b> let the Sun's energy in but stop heat energy from leaving.`,
+ `The five in the notes: carbon dioxide (main contributor to global warming), methane (second largest), nitrous oxide, fluorinated gases (not natural, very powerful, many banned) and water vapour (most abundant, about half of the greenhouse effect).`],
+8:[`<b class="k">Climate change</b> is a long-term shift in temperatures and weather patterns. It can have natural causes, but scientific evidence shows the current period is caused by human activities.`,
+ `Species have always adapted, but now they must adapt at an unprecedented rate. Species that fail to adapt are at risk of extinction, which threatens biodiversity.`,
+ `Indicators of climate change: rising temperature, melting ice, sea level rise, extreme weather events, ocean changes (warmer and more acidic), changes in precipitation, and vegetation and wildlife shifts.`,
+ `<b class="k">Tolerance range</b> is the threshold of abiotic factors a species needs to survive, such as a salinity range for an aquatic species.`,
+ `Four human impacts on biodiversity: pollution, over-exploitation of resources, introduced species and habitat destruction (including deforestation and desertification).`,
+ `<b class="k">Succession</b> is a series of changes in an ecosystem over time. <b class="k">Primary</b> succession starts from scratch with no soil (lava rock, land left by melted glaciers). <b class="k">Secondary</b> succession follows a disturbance where soil and nutrients remain (a wildfire).`],
+9:[`<b class="k">Standard deviation</b> measures how spread out data is around the mean. A wider spread gives a larger standard deviation. For normally distributed data, 68% lies within one standard deviation of the mean.`,
+ `To calculate it: find the mean, subtract the mean from each value, square each result, add them up, divide by (n − 1), then take the square root. The unit matches the raw data.`,
+ `A <b class="k">t-test</b> compares the mean and standard deviation of two samples to see if the difference is significant, meaning most likely not due to chance or sampling error.`,
+ `<b class="k">Unpaired</b> t-test: control group vs. treated group. <b class="k">Paired</b> t-test: the same group before and after treatment.`,
+ `The <b class="k">null hypothesis</b> says there is no significant difference. The <b class="k">alternative hypothesis</b> says there is one.`,
+ `Biology uses p = 0.05. Degrees of freedom = n₁ + n₂ − 2. Look up the critical t-value for your degrees of freedom at p = 0.05. A calculated t-value larger than the critical value means a significant difference.`]
+};
+
+/* ---------- Flashcards: [lesson, term, definition, example] ---------- */
+const CARDS=[
+[1,"Atmosphere","The layer of gases that extends above Earth's surface.","Clouds, the ozone layer, air that is about 78% nitrogen"],
+[1,"Hydrosphere","All the water on Earth.","Lake Ontario, morning dew"],
+[1,"Lithosphere","All the rock, soil and ground on Earth.","An amethyst geode, farm soil"],
+[1,"Biosphere","All living organisms on Earth, including those in oceans, forests and grasslands.","Deer and elk in a boreal forest"],
+[1,"Population","Interacting groups of organisms of the same species living in an area.","Grey wolves in Yellowstone National Park"],
+[1,"Community","All of the interacting living organisms in an ecosystem. It is made of all the populations in an area, including plants, animals, fungi and bacteria.","Wolves, elk, trees, fungi and bacteria in Yellowstone"],
+[1,"Habitat","The place where a community, species, population or organism lives. It can be described by location and by type of ecosystem.","The Great Barrier Reef is a habitat for clownfish"],
+[1,"Ecosystem","All the living organisms that share a region and interact with each other and with their non-living environment.","The Amazon rainforest with its plants, animals, soil, water and air"],
+[1,"Biome","A collection of ecosystems with similar abiotic factors and convergent evolution.","Tundra, grassland, desert, rainforest, the Canadian boreal forest"],
+[1,"Biotic factors","The living components of an ecosystem: organisms, their remains, and features from their activities such as nests, products and waste.","Animals, vegetation, bacteria"],
+[1,"Abiotic factors","The non-living physical and chemical components of an ecosystem.","Temperature, wind, water, minerals, air"],
+[1,"Biodiversity","A measure of the variety of life in all its forms, levels and combinations. It includes ecosystem diversity, species diversity and genetic diversity.","The enormous variety of species in the Amazon rainforest"],
+[1,"Sustainable","Maintained by natural processes.","A natural forest that keeps itself going without human help"],
+[1,"Natural ecosystem","An ecosystem not created or maintained by humans. Most are sustainable.","Forests in Algonquin Provincial Park"],
+[1,"Artificial ecosystem","An ecosystem created and maintained by humans. It is usually not sustainable and needs management of its biotic and abiotic factors.","An aquarium"],
+[1,"Trophic level","A feeding (nutrition) level in an ecological pyramid.","Oak leaves, caterpillars, blue jays and hawks sit on four different levels"],
+[1,"Producer (autotroph)","An organism that makes its own energy-rich food compounds using the Sun's energy.","Grass, oak trees, phytoplankton"],
+[1,"Consumer (heterotroph)","An organism that gets its energy by consuming other organisms. Primary consumers eat producers, secondary eat primary, tertiary eat secondary.","Caterpillar (primary), blue jay (secondary), hawk (tertiary)"],
+[1,"Pyramid of energy","Shows the energy available at each trophic level and how much is transferred between levels.","25,500 kcal in oak leaves → 4,000 → 470 → 24 kcal in the hawk"],
+[1,"Pyramid of numbers","Shows the number of organisms at each trophic level.","2 oak trees → 1000 caterpillars → 20 blue jays → 1 hawk"],
+[1,"Pyramid of biomass","Shows the biomass at each trophic level, measured in grams of dry mass within an area.","Oak trees 11,000 g/m² → caterpillars 800 → blue jays 400 → hawk 80"],
+[1,"The 10% rule","Only about 10% of the energy at one trophic level is transferred to the next.","Energy is used to live, lost in waste, or left in parts that are not eaten"],
+[2,"Limiting factor","A resource in an ecosystem that limits the growth of a population.","Not enough elk or deer for the wolves in Yellowstone"],
+[2,"Density-dependent factor","A limiting factor whose effect increases as the population grows.","Competition, disease, predation"],
+[2,"Density-independent factor","A limiting factor that affects a population no matter how large it is.","Natural disasters, climate change"],
+[2,"Carrying capacity","The largest population size of an organism that an ecosystem can sustain. It is set by many biotic and abiotic factors.","Moose and wolves on Isle Royale"],
+[2,"Equilibrium","The state of an ecosystem when its populations do not change very much over time.","Stable grass, rabbit, snake and hawk numbers in the simulation"],
+[2,"Food web","A diagram of the flow of energy through food in an ecosystem. Arrows point from the lower-level organism to the higher-level organism that eats it.","Aspen → elk → wolf"],
+[2,"Ecological niche","The specific role an organism holds in an ecosystem, including the biotic and abiotic interactions that affect its growth, survival and reproduction, and how it gets food.","Earthworms and fungi decomposing waste"],
+[2,"Activity pattern","When an organism is active.","Owls are nocturnal: active at night"],
+[2,"Utilization of resources","The resources an organism uses to survive.","Food, water, shelter"],
+[2,"Symbiotic relationship","A close and long-term biological interaction between two organisms of different species.","Barnacles living on whales"],
+[2,"Commensalism (+/0)","One species benefits and the other is neither helped nor harmed.","Remora fish eating a shark's scraps; cattle egrets eating insects stirred up by cattle"],
+[2,"Mutualism (+/+)","Both species benefit.","Algae feed a fungus and the fungus gives the algae a place to live; termites and their gut bacteria"],
+[2,"Parasitism (−/+)","One species benefits at the expense of the other, often by living in or on it and causing harm.","A flea on a dog; a tapeworm in a human"],
+[2,"Predation (−/+)","One species consumes another species.","A bear eating fish"],
+[2,"Competition (−/−)","Two species are trying to get the same resource.","Elk and bison competing for grass"],
+[2,"Herbivore","An organism that eats only plants. Prefix herb- means plants.","A white-tailed deer"],
+[2,"Carnivore","An organism that eats meat. Prefix carn- means meat.","A hawk eating a mouse"],
+[2,"Omnivore","An organism that eats plants and animals. Prefix omni- means all.","A black bear eating berries and fish"],
+[2,"Scavenger","An organism that eats remains.","A vulture"],
+[2,"Detrivore","An organism that eats fecal matter and waste. Prefix detri- means waste.","An earthworm"],
+[2,"auto- and hetero-","auto- means self, so an autotroph feeds itself. hetero- means different or other, so a heterotroph feeds on others.","Autotroph: a plant. Heterotroph: any consumer"],
+[3,"Native species","An organism found in an ecosystem due to natural processes and established there for a long time.","Bald eagles in North America; Bd in Asia"],
+[3,"Introduced species","An organism that has been accidentally or deliberately introduced into an area beyond its native range but has not established.","A species carried to a new region through the pet trade"],
+[3,"Naturalized species","An introduced organism that integrates itself into the existing ecosystem without causing harm.","The common dandelion in North America"],
+[3,"Invasive species","An organism that is introduced to an ecosystem, grows and spreads without human cultivation, and causes environmental and/or economic harm.","Zebra mussels in North America; Bd outside Asia"],
+[3,"Endemic species","An organism unique to one particular area or ecosystem.","Galápagos giant tortoise; many amphibians of New Guinea"],
+[3,"Natural selection","Offspring are all slightly different. Small differences give some a survival advantage. Those reproduce more, so the helpful changes are selected for by nature.","Peppered moths in England; Bd-resistant frogs"],
+[3,"Bd","Batrachochytrium dendrobatidis, a fungus that infects amphibian skin. It has been called the most deadly pathogen known to science.","Linked to declines in 501 species and at least 90 presumed extinctions"],
+[4,"Photosynthesis","Plants use light from the Sun to help produce glucose. Glucose stores energy and is the main building material of a plant.","carbon dioxide + water + light energy → glucose + oxygen"],
+[4,"Cellular respiration","Cells release energy starting with glucose and oxygen gas. Water and carbon dioxide are produced. The energy powers the functions of a cell.","glucose + oxygen → carbon dioxide + water + energy"],
+[4,"Carbon sink","Long-term storage of carbon from organisms that were not immediately recycled by decomposers.","Coal, oil, peat, natural gas"],
+[4,"Fossil fuels","Carbon-based fuels formed from decayed organisms over millions of years.","Coal, oil, natural gas"],
+[4,"Combustion","Burning. One of the two ways carbon enters the atmosphere.","Car and factory emissions"],
+[4,"Reforestation","Planting forests to combat climate change. It increases photosynthesis, which takes CO₂ out of the air and stores the carbon in the trees.","Replanting a logged area"],
+[5,"Percolation","Water sinks down through the soil, deep into the ground, where it is called groundwater.","Rain soaking down to an aquifer"],
+[5,"Aquifer","A large collection of groundwater.","The source people reach when they drill a well"],
+[5,"Transpiration","Plants absorb water through their roots, move it through their tissues and release it as water vapour. It moves nutrients up from the ground and cools the plant.","Water vapour leaving the leaves of a tree"],
+[5,"Surface runoff","Water from rain, melting snow or other precipitation that flows over the surface instead of soaking into the ground.","Rain running off a fertilized field into a river"],
+[5,"Turbidity","A measure of the cloudiness of water. It depends on the shape, size and concentration of particles suspended in it. Measured with an optical probe that detects scattered light.","Muddy river water after a storm"],
+[5,"Decomposition","A vital process that recycles the resources stored in dead remains. Many decomposers use cellular respiration, consuming oxygen and the remains.","Bacteria and fungi breaking down dead algae"],
+[5,"Decomposers","Organisms that carry out decomposition.","Certain bacteria, fungi, insects and some larger animals"],
+[5,"Algal bloom","A rapid increase in algae. When the algae die, decomposers multiply and use up dissolved oxygen, which can kill fish.","Fertilizer runoff feeding algae in a lake in summer"],
+[5,"Bioaccumulation","Toxins and heavy metals build up in one organism throughout its lifetime.","Mercury building up in a single fish"],
+[5,"Biomagnification","Toxins and heavy metals reach higher concentrations in organisms higher up a food chain.","Top predator fish with more mercury than the small fish they eat"],
+[5,"Water quality","The chemical, physical and biological characteristics of a water sample, used to judge how healthy it is for drinking, swimming or supporting an ecosystem.","A city's drinking water report"],
+[5,"Baseline","The natural resting point of an ecosystem, found by measuring each characteristic regularly.","Normal temperature and pH for a stream"],
+[5,"Water clarity","Shows how far sunlight can reach into the water. Measured by lowering a Secchi disk until it can no longer be seen.","A Secchi disk reading"],
+[5,"Conductivity","Shows whether a pollution event has taken place. A digital probe sends an electrical pulse through the water.","A sudden spike after a spill"],
+[5,"pH (water)","The acidity or alkalinity of water. It affects how available nutrients are and whether heavy metals can dissolve. Measured with a pH strip or probe.","Testing a lake with a pH strip"],
+[5,"Dissolved oxygen","Oxygen gas dissolved in water. Fish and plants depend on it.","Levels rise in daylight as aquatic plants photosynthesize"],
+[6,"Nitrogen cycle","The movement of nitrogen between the atmosphere, soil and living things.","Air → nitrates in soil → plants → animals → decomposers → back to soil or air"],
+[6,"Nitrogen fixation","The first step in turning atmospheric nitrogen into a form living things can use. It is done by nitrogen-fixing bacteria. Lightning can make nitrates in a single step.","Nitrogen-fixing bacteria in soil"],
+[6,"Nitrification","Nitrifying bacteria finish the conversion to nitrates.","Nitrifying bacteria in soil making nitrates"],
+[6,"Ammonia","A nitrogen compound made when decomposers break down plant and animal waste. It reacts to form ammonium ions, which plants can absorb.","Decomposing manure"],
+[6,"Assimilation","Plants absorb nitrates and ammonium ions from the soil and use them to build proteins and DNA. Nitrogen becomes part of the plant and enters the food chain.","A plant building protein from soil nitrates"],
+[6,"Denitrification","Denitrifying bacteria convert nitrates in the soil back into atmospheric nitrogen.","Nitrogen gas returning to the air from soil"],
+[6,"Soil health","The capacity of a soil to function: its ability to infiltrate water and cycle nutrients.","Covered, undisturbed soil full of living organisms"],
+[6,"Soil food web","The community of organisms living all or part of their lives in the soil.","Bacteria, fungi and worms in garden soil"],
+[6,"Nitrogen (in soil)","Comes from the decomposition products of organic matter (ammonia and nitrates). An essential part of proteins and vital for plant growth.","Greener leaves, faster growth, higher yields"],
+[6,"Phosphorus (in soil)","Needed by plants, but less important than nitrogen. Comes from organic matter and phosphate minerals.","Strong root growth, resistance to insects and disease"],
+[6,"Soil pH","Whether soil is acidic or alkaline. It is critical to plant growth. High pH decreases the nutrient ions available to plants.","Most crops on the chart grow in slightly acidic to neutral soil"],
+[7,"Greenhouse effect","The role of the atmosphere in insulating the planet from heat loss. Greenhouse gases trap heat leaving the Earth and send it back.","Keeps Earth at about 14°C instead of −19°C"],
+[7,"Greenhouse gases (GHG)","Gases that trap heat in Earth's atmosphere. They let the Sun's energy in but prevent heat energy from leaving.","Carbon dioxide, methane, nitrous oxide, fluorinated gases, water vapour"],
+[7,"Carbon dioxide","Enters the atmosphere through burning fossil fuels. Removed naturally by plants in the carbon cycle. The main contributor to global warming.","Car exhaust"],
+[7,"Methane","Released from extracting and using fossil fuels. Also made naturally in wetlands and by livestock and other agriculture. The second-largest contributor to global warming.","Cattle farming"],
+[7,"Nitrous oxide","Released by industry and agriculture. A by-product of combustion in diesel cars. Also comes from wastewater, soils and oceans.","Diesel exhaust"],
+[7,"Fluorinated gases","Not produced naturally. Very powerful greenhouse gases that trap more heat than other gases. Many are banned.","Human-made industrial gases"],
+[7,"Water vapour","Earth's most abundant greenhouse gas. Enters naturally from the water cycle. Responsible for about half of the greenhouse effect.","Evaporation from oceans"],
+[8,"Climate change","Long-term shifts in temperatures and weather patterns in a location, a region or the whole planet. The current period is caused by human activities.","More intense droughts and heavier precipitation"],
+[8,"Tolerance range","The threshold of abiotic factors a species needs to survive. Outside it, the population will no longer exist.","An aquatic species that needs a certain salinity range"],
+[8,"Pollution","Any material or condition that harms the environment. It can be noise, light, air, water or land pollution.","A crude oil spill in the ocean"],
+[8,"Over-exploitation of resources","When humans use up a large fraction of a resource for their own needs.","Using a resource faster than it can be replaced"],
+[8,"Habitat destruction","Human activity that destroys habitat and threatens resident species and ecosystems. Includes desertification and deforestation.","Clearing a forest"],
+[8,"Succession","A series of changes in an ecosystem over time, in species composition, structure or vegetation.","Bare ground slowly becoming forest"],
+[8,"Primary succession","Succession that starts from scratch on new land or bare rock with no soil layer.","New lava rock on the Big Island of Hawaii; land left by melted glaciers"],
+[8,"Secondary succession","Succession after a disturbance killed most of a community. Soil and nutrients are still present, so it does not go back to the beginning.","Regrowth after the 2018 British Columbia wildfires"],
+[8,"Indicators of climate change","Rising temperature, melting ice, sea level rise, extreme weather events, ocean changes, changes in precipitation, vegetation and wildlife shifts.","Oceans becoming warmer and more acidic"],
+[9,"Standard deviation","A statistic that measures how spread out normally distributed data is around the mean.","68% of the data lies within one standard deviation of the mean"],
+[9,"t-test","A statistical test that compares the mean and standard deviation of two samples to see if there is a significant difference between them.","Comparing tanks with plants to tanks without plants"],
+[9,"Significant difference","A result that is most likely not due to chance or sampling error.","A calculated t-value larger than the critical t-value"],
+[9,"Null hypothesis","There is no significant difference between the two groups. Any difference seen may be due to chance and sampling error.","Brown and white eggs have the same mean weight"],
+[9,"Alternative hypothesis","There is a significant difference between the two groups, most likely not due to chance or sampling error.","Brown and white eggs have different mean weights"],
+[9,"Unpaired vs. paired t-test","Unpaired compares a control group with a treated group. Paired compares the same group before and after treatment.","Paired: blood pressure before and after a treatment"],
+[9,"p-value","The probability of concluding there is a significant difference when the null hypothesis is actually true. Biology uses 0.05.","5 times out of 100 you would find a difference that is not really there"],
+[9,"Degrees of freedom","For a t-test, the sum of the two sample sizes minus 2.","Two groups of 10: 10 + 10 − 2 = 18"]
+];
+
+/* ---------- Quiz: [lesson, question, [correct, wrong, wrong, wrong], explanation] ---------- */
+const QUIZ=[
+[1,"Which list contains only abiotic factors?",["Temperature, wind, minerals","Fungi, water, air","Nests, soil, bacteria","Waste, sunlight, grass"],"Abiotic factors are non-living physical and chemical components. Fungi, bacteria and grass are organisms, and nests and waste come from organisms, so those count as biotic."],
+[1,"All the grey wolves living in Yellowstone are an example of a...",["Population","Community","Ecosystem","Biome"],"A population is one species in an area. A community would include every species living there."],
+[1,"What is the difference between a community and an ecosystem?",["An ecosystem also includes the non-living environment","A community includes only animals","An ecosystem contains only one species","A community is always larger"],"A community is all the living organisms. An ecosystem is those organisms plus the abiotic environment they interact with."],
+[1,"A biome is best described as...",["A collection of ecosystems with similar abiotic factors","All the water on Earth","One species living in one area","An ecosystem maintained by humans"],"Tundra, grassland, desert and rainforest are biomes. Abiotic factors such as temperature and rainfall determine where they are found."],
+[1,"Why does an aquarium need constant care while a natural forest does not?",["Artificial ecosystems are usually not sustainable","Aquariums have no abiotic factors","Forests have no decomposers","Aquariums have too much biodiversity"],"Natural processes maintain most natural ecosystems. Artificial ecosystems need humans to manage their biotic and abiotic factors."],
+[1,"Biodiversity includes which three kinds of diversity?",["Ecosystem, species and genetic","Biotic, abiotic and artificial","Producer, consumer and decomposer","Energy, biomass and numbers"],"The notes define biodiversity as the variety of life including ecosystem diversity, species diversity and genetic diversity."],
+[1,"In Model 1, oak leaves hold 25,500 kcal and caterpillars get 4,000 kcal. About what percentage was passed on?",["About 16%","About 1%","About 50%","About 84%"],"4,000 ÷ 25,500 × 100 ≈ 15.7%. The other 84% or so was not passed on."],
+[1,"Roughly how much energy is transferred from one trophic level to the next?",["About 10%","About 1%","About 50%","About 90%"],"Only about 10% moves up. The rest is used for living, lost in waste, or is in parts that are not eaten."],
+[1,"Why do energy pyramids usually have only four or five levels?",["So little energy is left that another level cannot be supported","Top predators have no predators","Producers stop photosynthesizing","Decomposers remove the top level"],"With only about 10% passed on each time, the energy runs out quickly. In Model 1 the hawk gets just 24 kcal of the leaves' 25,500 kcal."],
+[1,"In Model 1 the sunlight provides 3,190,000 kcal and the oak leaves absorb 25,500 kcal. What process captures this energy?",["Photosynthesis","Cellular respiration","Decomposition","Transpiration"],"Producers harness the Sun's energy by photosynthesis. The leaves capture less than 1% of the sunlight that reaches them."],
+[1,"A pyramid of numbers shows 2 oak trees supporting 1000 caterpillars. What does this tell you?",["A pyramid of numbers can be misleading because it ignores the size of organisms","The data must be wrong","Caterpillars are producers","Energy increased going up a level"],"One huge tree can feed many small caterpillars. Pyramids of energy or biomass give a more accurate picture."],
+[1,"In Pyramid Y, 40 g/m² of phytoplankton support 210 g/m² of zooplankton. How is that possible?",["Phytoplankton reproduce very rapidly as they are eaten","Zooplankton make their own food","Biomass is created at each level","Phytoplankton are consumers"],"Phytoplankton are eaten quickly, so they must reproduce rapidly. A small amount at any moment can still feed a larger mass of consumers."],
+[1,"Which type of organism is missing from all three pyramid models?",["Decomposers","Producers","Herbivores","Carnivores"],"None of the pyramids show decomposers, even though they recycle matter from every level."],
+[1,"In the Model 1 pyramid, the blue jay is a...",["Secondary consumer","Primary producer","Primary consumer","Tertiary consumer"],"Oak leaves are the producer, caterpillars the primary consumer, blue jays the secondary consumer and the hawk the tertiary consumer."],
+[2,"Which of these is a density-independent limiting factor?",["A natural disaster","Disease","Competition for food","Predation"],"Natural disasters and climate change affect a population whatever its size. Disease, competition and predation get stronger as the population grows."],
+[2,"Carrying capacity is...",["The largest population an ecosystem can sustain","The number of species in an ecosystem","The fastest a population can grow","The amount of energy a producer stores"],"It is set by many factors in the organism's biotic and abiotic environment."],
+[2,"An ecosystem is in equilibrium when...",["Its populations do not change very much over time","It has no predators","Every population keeps growing","Only producers remain"],"Stable populations over time are the sign of equilibrium."],
+[2,"In the grass, rabbit, snake and hawk food chain, what happens to the grass at first if the rabbit population doubles?",["It decreases","It increases","It stays exactly the same","It doubles too"],"More rabbits eat more grass. Snakes and hawks would increase at first because they have more food."],
+[2,"In the same food chain, why would adding more snakes cause the grass to increase?",["Snakes eat rabbits, so fewer rabbits eat the grass","Snakes fertilize the grass","Snakes eat hawks","Snakes compete with grass"],"More snakes means fewer rabbits, and fewer rabbits means less grass gets eaten."],
+[2,"After wolves were removed from the Yellowstone model, what happened in the first few years?",["Elk increased and aspen trees decreased","Elk and aspen both increased","Elk decreased and aspen increased","Nothing changed"],"With no predator, elk numbers rose. More elk browsed more aspen, so the trees declined."],
+[2,"When wolves were reintroduced, the limiting factor for elk changed to...",["Predation by wolves","Lack of water","Competition with beavers","Sunlight"],"Before, elk were limited mainly by food. With wolves back, predation lowered the elk carrying capacity and the trees recovered."],
+[2,"In a food web, which way do the arrows point?",["From the organism being eaten to the organism that eats it","From predator to prey","From larger to smaller organisms","In both directions"],"Arrows follow the flow of energy, from lower-level organisms to higher-level organisms."],
+[2,"A flea feeds on a dog's blood. The dog gets itchy and may get infections. This is...",["Parasitism","Mutualism","Commensalism","Competition"],"The flea benefits at the dog's expense."],
+[2,"Remora fish eat scraps a shark drops. The shark seems unaffected. This is...",["Commensalism","Mutualism","Parasitism","Predation"],"One species benefits (+) and the other is neither helped nor harmed (0)."],
+[2,"Bacteria in a termite's gut digest cellulose for the termite and get food from it. This is...",["Mutualism","Commensalism","Parasitism","Competition"],"Both benefit. The termite could not digest cellulose without the bacteria."],
+[2,"Elk and bison both eat the same grass. This interaction is...",["Competition","Predation","Mutualism","Commensalism"],"Two species trying to get the same resource are competing, and both are affected negatively (−/−)."],
+[2,"An autotroph is an organism that...",["Makes its own food using the Sun's energy","Eats only plants","Eats waste","Eats other consumers"],"auto- means self. Autotrophs are producers. Heterotrophs get energy by consuming other organisms."],
+[2,"Which describes an ecological niche?",["The specific role an organism holds in its ecosystem","Only the place an organism lives","The number of organisms in a population","A group of similar ecosystems"],"Habitat is where it lives. Niche is its whole role, including how it gets food and interacts with biotic and abiotic factors."],
+[2,"Which organism eats the remains of dead animals?",["Scavenger","Producer","Herbivore","Autotroph"],"Scavengers such as vultures eat remains. Detrivores eat fecal matter and waste."],
+[3,"What makes a species invasive rather than just introduced?",["It spreads without human help and causes environmental or economic harm","It was brought by humans on purpose","It is found in only one place","It has lived in the area for a long time"],"Invasive species grow and propagate without cultivation and cause harm. A harmless one that settles in is naturalized."],
+[3,"An endemic species is...",["Unique to one particular area or ecosystem","Found on every continent","Introduced by accident","Harmful to native species"],"The Galápagos giant tortoise is endemic. If an endemic species is lost in its one home, it is extinct."],
+[3,"Where do scientists think the Bd fungus originated?",["The Korean Peninsula","Panama","Australia","Belgium"],"DNA studies point to the Korean Peninsula. Bd was first identified in frogs in Australia and Panama in the late 1990s."],
+[3,"How did Bd most likely spread around the world?",["The international trade in pet amphibians","Migrating birds","Ocean currents","Climate change"],"The article says it probably travelled through the international pet amphibian trade."],
+[3,"Why is Bd not considered invasive in Asia?",["It is a native species there and amphibians there are not harmed","It has never been found there","It was banned there","The climate is too cold"],"Bd has been established in Asia for a long time. Amphibians there seem impervious to it."],
+[3,"Why are amphibians in Korea not harmed by Bd?",["Natural selection favoured resistant individuals over a long time","They do not have skin","They were vaccinated","The fungus cannot live in water"],"Individuals with resistance survived and reproduced more, so resistance was selected for. Frogs elsewhere have had no time for this."],
+[3,"According to the study, how many amphibian species have declined because of Bd?",["501, with at least 90 presumed extinct","About 20","Exactly 200, with none extinct","More than 5,000"],"The 2019 study found 501 species in decline, more than twice the earlier estimate of about 200."],
+[3,"Why are scientists especially worried about Bd reaching New Guinea?",["It has many endemic amphibian species found nowhere else","It is where Bd started","It has no frogs","Its frogs are already resistant"],"New Guinea is home to a wealth of amphibian species found nowhere else on Earth, so losses there would be extinctions."],
+[3,"If frogs suddenly disappeared from a stream ecosystem, what would likely happen?",["Algae and insects would increase and frog predators would have less food","Algae would decrease","Insects would disappear","Nothing would change"],"Tadpoles eat algae and frogs eat insects. Birds and other predators that eat frogs would have to find alternatives."],
+[3,"Which conditions does Bd thrive in?",["Cool and moist","Hot and dry","Salty water","Frozen ground"],"Frogs in cloud forests on mountainsides have been hit particularly hard."],
+[3,"The common dandelion in North America settled in without causing harm. It is...",["Naturalized","Endemic","Native","Invasive"],"A naturalized species is an introduced organism that integrates into the ecosystem without causing harm."],
+[4,"What are the inputs of photosynthesis?",["Carbon dioxide, water and light energy","Glucose and oxygen","Oxygen and water","Glucose and carbon dioxide"],"carbon dioxide + water + light energy → glucose + oxygen."],
+[4,"What are the outputs of cellular respiration?",["Carbon dioxide, water and energy","Glucose and oxygen","Oxygen and light","Glucose and water"],"glucose + oxygen → carbon dioxide + water + energy."],
+[4,"Why are photosynthesis and cellular respiration called complementary?",["The outputs of one are the inputs of the other","They both need sunlight","They both happen only in plants","They both release oxygen"],"Photosynthesis makes glucose and oxygen. Respiration uses glucose and oxygen and gives back carbon dioxide and water."],
+[4,"Why does atmospheric CO₂ drop in spring and summer?",["Plants are growing, so photosynthesis is strong","Animals stop respiring","Fossil fuel use stops","Decomposers die"],"Growing plants take in more carbon dioxide. In winter there is less photosynthesis, so levels are higher."],
+[4,"What are the two ways carbon enters the atmosphere in the carbon cycle diagram?",["Respiration and combustion","Photosynthesis and feeding","Decay and percolation","Transpiration and evaporation"],"Respiration by living things and combustion of fuels both release carbon dioxide."],
+[4,"Which materials are carbon sinks in the notes' carbon cycle?",["Coal, oil, peat and natural gas","Clouds, rain, rivers and lakes","Oxygen, nitrogen, argon and helium","Sand, salt, iron and gold"],"These store carbon from organisms that were not immediately decomposed. Together they are fossil fuels."],
+[4,"How does burning fossil fuels affect the atmosphere?",["It releases stored carbon as carbon dioxide","It removes carbon dioxide","It adds oxygen","It has no effect on carbon"],"Combustion moves carbon from long-term storage into the atmosphere, increasing CO₂."],
+[4,"Why does reforestation help combat climate change?",["More photosynthesis removes CO₂ and stores carbon in trees","Trees release more CO₂","Trees stop respiration in animals","Forests reflect all sunlight"],"Planting forests increases photosynthesis. The carbon ends up in the glucose and structure of the trees."],
+[4,"A sealed bottle holds air, water, insects for food and a frog, with light coming in. Why is it not sustainable?",["Nothing photosynthesizes, so oxygen runs out while CO₂ builds up","Frogs do not need oxygen","Light cannot enter a bottle","There is too much water"],"The frog and insects carry out cellular respiration, but there are no plants to make oxygen and glucose through photosynthesis."],
+[4,"What would happen if decomposition did not occur?",["Wastes and dead organisms would pile up and their matter would not be reused","Plants would grow faster","Oxygen would disappear instantly","Fossil fuels would vanish"],"Decomposers break down wastes and dead organisms so their components can be used again."],
+[5,"Which two processes turn liquid water into water vapour?",["Evaporation and transpiration","Percolation and runoff","Precipitation and absorption","Condensation and percolation"],"Evaporation happens from lakes and oceans. Transpiration is water vapour released by plants."],
+[5,"What is an aquifer?",["A large collection of groundwater","A cloud of water vapour","A fast-flowing river","A type of algae"],"Water percolates down through soil to become groundwater. Large collections are aquifers."],
+[5,"To stop an aquifer from shrinking, what must balance the water people pump out?",["Water percolating back into the ground","Water evaporating from the ocean","Transpiration from trees","Surface runoff to rivers"],"Water removed must be replaced by percolation, or the aquifer shrinks."],
+[5,"What is surface runoff likely to do to a fertilized field?",["Carry fertilizer into nearby water, which can cause an algal bloom","Add nitrogen to the air","Make the soil thicker","Stop algae from growing"],"Runoff flows over the surface and takes fertilizer with it. On thin soil it can also wash the soil away."],
+[5,"Put the steps of a fish kill in order after nutrients enter a lake.",["Algae bloom, algae die, decomposers multiply, oxygen drops, fish die","Fish die, algae bloom, oxygen rises, decomposers die","Oxygen drops, algae bloom, decomposers die, fish die","Decomposers multiply, fish die, algae bloom, oxygen rises"],"Decomposers feeding on the dead algae use cellular respiration, which consumes the dissolved oxygen fish need."],
+[5,"Dissolved oxygen in a river rises and falls every day. What adds oxygen?",["Photosynthesis by aquatic plants and algae in daylight","Fish breathing","Decomposers at night","Surface runoff"],"Photosynthesis releases oxygen when there is sunlight. Respiration uses it all the time."],
+[5,"In Canada, when do algae reproduce best?",["Summer, when there is the most sunlight for photosynthesis","Winter, when lakes freeze","Any time, it makes no difference","Only at night"],"Algae reproduce when they have plenty of glucose and nutrients. More sunlight means more photosynthesis and more glucose."],
+[5,"Local fish have a higher mercury concentration than the water they live in. Which idea explains this?",["Bioaccumulation and biomagnification","Percolation","Transpiration","Turbidity"],"Mercury builds up over a fish's lifetime (bioaccumulation) and gets more concentrated higher up the food chain (biomagnification)."],
+[5,"What is the difference between bioaccumulation and biomagnification?",["Bioaccumulation is in one organism over its life. Biomagnification is up a food chain.","They mean the same thing","Bioaccumulation is in water and biomagnification is in soil","Biomagnification only happens in plants"],"One happens over time inside an organism. The other happens from one trophic level to the next."],
+[5,"What does turbidity measure?",["The cloudiness of water","The temperature of water","The acidity of water","The amount of dissolved oxygen"],"It depends on particles suspended in the water. An optical probe detects how much light scatters off them."],
+[5,"Which tool measures water clarity?",["A Secchi disk","A pH strip","A thermometer","A conductivity probe"],"The disk is lowered until it can no longer be seen, and that length is measured."],
+[5,"Why is water conductivity measured?",["It indicates whether a pollution event has taken place","It shows how deep the water is","It counts the fish","It measures sunlight"],"A digital probe sends an electrical pulse through the water."],
+[5,"A water report shows a substance's maximum measured value is below the Maximum Allowable Concentration. What can you conclude?",["It did not exceed safe levels","It exceeded safe levels","The water was never tested","The substance is not in the water at all"],"Compare the measured maximum with the maximum allowable concentration set by health regulations."],
+[6,"Why can't plants and animals use nitrogen straight from the air?",["Neither can absorb atmospheric nitrogen","There is no nitrogen in the air","Nitrogen is poisonous","Only animals can"],"Plants take in nitrates or ammonium ions from soil. Animals get nitrogen by digesting plants or other animals."],
+[6,"Which process converts atmospheric nitrogen to nitrates in a single step?",["Lightning","Assimilation","Denitrification","Decomposition"],"Otherwise it takes two steps: nitrogen fixation by nitrogen-fixing bacteria, then nitrification by nitrifying bacteria."],
+[6,"What do decomposers produce when they break down plant and animal waste?",["Ammonia","Atmospheric nitrogen","Glucose","Oxygen"],"The ammonia reacts to form ammonium ions, which plants can absorb."],
+[6,"Plants absorbing nitrates and using them to build proteins and DNA is called...",["Assimilation","Nitrification","Denitrification","Nitrogen fixation"],"Assimilation is how nitrogen becomes part of the plant's tissues and enters the food chain."],
+[6,"Which process returns nitrogen from the soil to the atmosphere?",["Denitrification","Assimilation","Nitrification","Percolation"],"Denitrifying bacteria convert nitrates in the soil back into atmospheric nitrogen."],
+[6,"A plant has very green leaves, grows fast and gives a high yield. Which nutrient is it getting plenty of?",["Nitrogen","Phosphorus","Carbon dioxide","Mercury"],"Nitrogen is an essential part of proteins. Phosphorus is linked to strong roots and resistance to insects and disease."],
+[6,"What effect does high soil pH have?",["It decreases the nutrient ions available to plants","It adds nitrogen to the soil","It kills all bacteria","It has no effect on plants"],"Soil pH is critical to plant growth. High pH makes fewer nutrient ions available."],
+[6,"Tilling releases carbon dioxide from soil. What is the suggested improvement?",["Disturb the soil less and keep it covered with residue or mulch","Till more often","Remove all plant matter","Add more pesticide"],"The notes compare tilling to a hurricane, tornado and forest fire happening at once."],
+[6,"Soil health is defined as...",["The capacity of soil to function: to infiltrate water and cycle nutrients","How dark the soil looks","How deep the soil is","How dry the soil is"],"Soil is described as a living factory of large and microscopic workers that need food and places to live."],
+[7,"What does the greenhouse effect do?",["The atmosphere traps heat and insulates the planet","It blocks all sunlight","It makes holes in the atmosphere","It cools the oceans"],"Greenhouse gases trap heat bouncing off the Earth and send it back, like a blanket."],
+[7,"With natural levels of greenhouse gases, Earth's average temperature is about...",["14°C","−19°C","0°C","37°C"],"Without the greenhouse effect it would be a freezing −19°C."],
+[7,"Is the greenhouse effect itself a bad thing?",["No. We need it to stay warm, but humans are making it too strong","Yes. Without it Earth would be healthier","Yes. It is caused only by pollution","No. It has no effect on temperature"],"The natural blanket keeps Earth livable. Adding more gases makes the blanket too thick and the Earth warms."],
+[7,"Which greenhouse gas is the main contributor to global warming?",["Carbon dioxide","Water vapour","Nitrous oxide","Fluorinated gases"],"Carbon dioxide enters the atmosphere through burning fossil fuels. Methane is the second-largest contributor."],
+[7,"Which greenhouse gas is the most abundant?",["Water vapour","Methane","Carbon dioxide","Nitrous oxide"],"Water vapour enters naturally from the water cycle and is responsible for about half of the greenhouse effect."],
+[7,"Which greenhouse gases are not produced naturally?",["Fluorinated gases","Methane","Water vapour","Carbon dioxide"],"They are very powerful, trapping more heat than other gases, and many are banned."],
+[7,"Which is a source of methane?",["Livestock and wetlands","Lightning","Volcanic rock","Photosynthesis"],"Methane also comes from extracting and using fossil fuels."],
+[8,"What does scientific evidence show about the current period of climate change?",["It is caused by human activities","It is entirely natural","It is not happening","It only affects the oceans"],"Climate change can have natural causes, but the current period is caused by humans."],
+[8,"Why does fast climate change threaten biodiversity?",["Species that cannot adapt quickly enough are at risk of extinction","Species stop reproducing in warm weather","It creates too many new species","It removes all abiotic factors"],"Species have always adapted, but the recent shift forces them to adapt at an unprecedented rate."],
+[8,"Which is an indicator of climate change listed in the notes?",["Oceans becoming warmer and more acidic","The Moon changing shape","Shorter days in winter","Earthquakes"],"The seven indicators are rising temperature, melting ice, sea level rise, extreme weather, ocean changes, changes in precipitation, and vegetation and wildlife shifts."],
+[8,"Why do oceans become more acidic?",["They absorb extra carbon dioxide from the atmosphere","Rain adds salt","Fish release acid","Ice melts into them"],"Increased carbon dioxide in the atmosphere is absorbed by the oceans, increasing their acidity."],
+[8,"Tolerance range is...",["The threshold of abiotic factors a species needs to survive","The number of predators a species can avoid","How far a species can migrate","The size of a habitat"],"For example, some aquatic species die out if the salt content of the water is too high or too low."],
+[8,"Which is NOT one of the four human impacts on biodiversity in the notes?",["Primary succession","Pollution","Over-exploitation of resources","Habitat destruction"],"The four are pollution, over-exploitation of resources, introduced species and habitat destruction."],
+[8,"A volcano in Hawaii makes new rock where there is no soil. What happens next?",["Primary succession","Secondary succession","Denitrification","Biomagnification"],"Primary succession starts from scratch on new land or bare rock. Weathering breaks the rock into soil and new plant life grows."],
+[8,"A wildfire burns a forest in British Columbia. The soil and nutrients remain. What happens next?",["Secondary succession","Primary succession","No regrowth is possible","Desertification"],"A disturbance killed most of the community, but soil is still present, so succession does not start from the beginning."],
+[8,"What is the key difference between primary and secondary succession?",["Primary starts with no soil. Secondary starts with soil still present.","Primary is faster","Secondary only happens in water","Primary only happens after fires"],"Secondary succession restarts the cycle, but not back to the beginning."],
+[9,"What does standard deviation measure?",["How spread out the data is around the mean","The middle value of the data","The largest value","The number of data points"],"The wider the spread of scores, the larger the standard deviation."],
+[9,"For normally distributed data, what percentage lies within one standard deviation of the mean?",["68%","5%","50%","95%"],"This is stated in the notes for data with a normal distribution."],
+[9,"Find the standard deviation of these exam scores: 92, 95, 85, 80, 75, 50.",["About 16.2","About 79.5","About 263.5","About 5.0"],"Mean = 79.5. Squared differences add to 1317.5. Divide by n − 1 = 5 to get 263.5, and the square root is about 16.2."],
+[9,"What does the null hypothesis say?",["There is no significant difference between the two groups","There is a significant difference","The experiment failed","The sample is too small"],"Any difference seen may be due to chance and sampling error."],
+[9,"You measure the same rats with and without stimulation. Which t-test fits?",["Paired","Unpaired","Neither","Both at once"],"A paired t-test compares pre- and post-treatment results for the same group. Unpaired compares separate control and treated groups."],
+[9,"Two groups have 10 samples each. What are the degrees of freedom?",["18","20","10","9"],"Degrees of freedom = sum of both sample sizes minus 2, so 10 + 10 − 2 = 18."],
+[9,"Your calculated t-value is larger than the critical t-value at p = 0.05. What do you conclude?",["There is a significant difference between the groups","There is no difference","The data is wrong","The null hypothesis is supported"],"A larger t-value means the two samples are more likely to be significantly different, so the difference is most likely not due to chance."],
+[9,"What does a p-value of 0.05 mean?",["5 times out of 100 you would find a significant difference even if there was none","The result is 5% correct","5 samples are needed","The means differ by 5%"],"It is the probability of wrongly concluding there is a significant difference when the null hypothesis is true."]
+];
+
+/* ---------- Storage (per device, optional) ---------- */
+const KEY="ecology-field-notes-v1";
+let saved={known:{},best:{}};
+try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&s.known)saved=Object.assign(saved,s)}catch(e){}
+const persist=()=>{try{localStorage.setItem(KEY,JSON.stringify(saved))}catch(e){}};
+
+/* ---------- App ---------- */
+const app=document.getElementById("app");
+const st={view:"home",lesson:0,fc:null,drill:null,back:false};
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+const inL=l=>st.lesson===0||l===st.lesson;
+const esc=s=>String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;");
+const lname=n=>n===0?"Whole unit":LESSONS[n].replace("Extension: ","");
+const ltag=n=>n===0?"All lessons":n===9?"Extension":"Lesson "+n;
+const ICON={
+ check:`<svg viewBox="0 0 22 22" width="22" height="22" aria-hidden="true"><circle cx="11" cy="11" r="11" fill="var(--good)"/><path d="M6.2 11.3 9.6 14.6 15.9 7.7" fill="none" stroke="var(--good-bg)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+ x:`<svg viewBox="0 0 22 22" width="18" height="18" aria-hidden="true"><path d="M5 5 17 17M17 5 5 17" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>`,
+ close:`<svg viewBox="0 0 22 22" width="14" height="14" aria-hidden="true"><path d="M4 4 18 18M18 4 4 18" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg>`,
+ tick:`<svg viewBox="0 0 22 22" width="18" height="18" aria-hidden="true"><path d="M4.5 11.5 9 16 17.5 6.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>`
+};
+const $=s=>app.querySelector(s);
+function go(view,back){st.view=view;st.back=!!back;render();window.scrollTo(0,0)}
+function render(){({home:renderHome,drill:renderDrill,result:renderResult,cards:renderCards,notes:renderNotes})[st.view]()}
+const head=(left,right,pct)=>`<header class="head"><div class="r"><span class="name">${esc(left)}</span><span class="count">${esc(right)}</span><button class="x" id="close" aria-label="Back to lessons">${ICON.close}</button></div>${pct==null?"":`<div class="meter"><i style="width:${pct}%"></i></div>`}</header>`;
+const bindClose=()=>{$("#close").onclick=()=>{st.drill=null;st.fc=null;go("home",true)}};
+
+/* Home: the lesson menu */
+function renderHome(){
+  const rows=[0,1,2,3,4,5,6,7,8,9].map(n=>{
+    const best=saved.best[n], count=QUIZ.filter(q=>n===0||q[0]===n).length;
+    return `<button class="row" data-l="${n}" aria-pressed="${st.lesson===n}"><span class="lab">${esc(lname(n))}</span><span class="sub">${best!=null?best+"%":count+" questions"}</span></button>`}).join("");
+  app.innerHTML=`<div class="stack ${st.back?"enter back":""}"><div><p class="kicker">Grade 9 science · Test prep</p><h1 class="title">Ecology</h1></div>
+   <p class="label">Pick what to study</p><div class="rows" id="lessons">${rows}</div></div>
+   <div class="grow"></div>
+   <div class="dock"><button class="btn" id="go-drill">Start drill</button><div class="pair"><button class="btn quiet" id="go-cards">Flashcards</button><button class="btn quiet" id="go-notes">Notes</button></div></div>`;
+  app.querySelectorAll("[data-l]").forEach(b=>b.onclick=()=>{st.lesson=+b.dataset.l;app.querySelectorAll("[data-l]").forEach(x=>x.setAttribute("aria-pressed",x===b))});
+  $("#go-drill").onclick=()=>{startDrill();go("drill")};
+  $("#go-cards").onclick=()=>{newDeck(false);go("cards")};
+  $("#go-notes").onclick=()=>go("notes");
+}
+
+/* Drill: one question fills the screen */
+function startDrill(pool,retry){
+  const src=pool||QUIZ.filter(q=>inL(q[0]));
+  const qs=shuffle(src).slice(0,pool?src.length:10).map(q=>({q,opts:shuffle(q[2]),pick:null}));
+  st.drill={qs,i:0,retry:!!retry};
+}
+function renderDrill(fresh=true){
+  const z=st.drill,x=z.qs[z.i],done=x.pick!==null,right=x.q[2][0],ok=x.pick===right;
+  const answered=z.qs.filter(y=>y.pick!==null).length;
+  app.innerHTML=head(lname(st.lesson),`Question ${z.i+1} of ${z.qs.length}`,answered/z.qs.length*100)+
+  `<section class="screen ${fresh?"enter":""}"><div class="ask"><h1 class="big">${esc(x.q[1])}</h1></div>
+   <div class="rows">${x.opts.map((o,k)=>{const state=!done?"":o===right?"right":o===x.pick?"wrong":"rest";
+     return `<button class="row opt" data-k="${k}" ${state?`data-state="${state}" disabled`:""}><span class="lab">${esc(o)}</span><span class="mark">${o===right?ICON.check:ICON.x}</span></button>`}).join("")}</div>
+   <div class="why" ${done?"data-open":""} data-tone="${done&&!ok?"miss":"hit"}" aria-live="polite"><div><p><b>${ok||!done?"Correct.":"Not quite."}</b> ${esc(x.q[3])}</p></div></div>
+   <button class="btn" id="next" ${done?"":"disabled"}>${z.i+1<z.qs.length?"Next":"See result"}</button></section>`;
+  bindClose();
+  if(!done)app.querySelectorAll(".opt").forEach(b=>b.onclick=()=>{
+    x.pick=x.opts[+b.dataset.k];const good=x.pick===right;
+    app.querySelectorAll(".opt").forEach((el,k)=>{const o=x.opts[k];el.dataset.state=o===right?"right":o===x.pick?"wrong":"rest";el.disabled=true});
+    const why=$(".why");why.dataset.tone=good?"hit":"miss";why.querySelector("b").textContent=good?"Correct.":"Not quite.";why.setAttribute("data-open","");
+    $(".meter i").style.width=z.qs.filter(y=>y.pick!==null).length/z.qs.length*100+"%";
+    const nx=$("#next");nx.disabled=false;nx.focus({preventScroll:true});
+    nx.scrollIntoView({block:"nearest",behavior:"smooth"});
+  });
+  $("#next").onclick=()=>{if(x.pick===null)return;z.i++;if(z.i>=z.qs.length)go("result");else{renderDrill();window.scrollTo(0,0)}};
+}
+function renderResult(){
+  const z=st.drill,right=z.qs.filter(x=>x.pick===x.q[2][0]).length,missed=z.qs.filter(x=>x.pick!==x.q[2][0]),pct=Math.round(right/z.qs.length*100);
+  if(!z.retry&&(saved.best[st.lesson]==null||pct>saved.best[st.lesson])){saved.best[st.lesson]=pct;persist()}
+  app.innerHTML=head(lname(st.lesson),"Round done",100)+
+  `<section class="screen enter"><div class="score"><span class="n">${right}</span><span class="of">of ${z.qs.length}</span></div>
+   <p class="label center">${missed.length?`${missed.length} to see again`:"Every answer right"}</p>
+   <div class="rows">${missed.map(x=>`<div class="row again"><span class="q">${esc(x.q[1])}</span><span class="a">${esc(x.q[2][0])}</span></div>`).join("")}</div>
+   ${missed.length?`<button class="btn" id="retry">Drill the ${missed.length} I missed</button><button class="btn quiet" id="again">New round</button>`:`<button class="btn" id="again">Go again</button>`}</section>`;
+  bindClose();
+  $("#again").onclick=()=>{startDrill();go("drill")};
+  if(missed.length)$("#retry").onclick=()=>{startDrill(missed.map(x=>x.q),true);go("drill")};
+}
+
+/* Flashcards */
+function newDeck(onlyLearning){
+  let ids=CARDS.map((c,i)=>i).filter(i=>inL(CARDS[i][0]));
+  if(onlyLearning)ids=ids.filter(i=>!saved.known[CARDS[i][1]]);
+  st.fc={ids:shuffle(ids),i:0,flip:false};
+}
+function renderCards(fresh=true){
+  const f=st.fc,all=CARDS.filter(c=>inL(c[0])),known=all.filter(c=>saved.known[c[1]]).length;
+  if(f.i>=f.ids.length){
+    app.innerHTML=head(lname(st.lesson),"Deck done",all.length?known/all.length*100:0)+
+    `<section class="screen enter"><div class="score"><span class="n">${known}</span><span class="of">of ${all.length}</span></div><p class="label center">terms marked “Got it”</p>
+     ${known<all.length?`<button class="btn" id="learn">Drill the ${all.length-known} still learning</button>`:""}<button class="btn ${known<all.length?"quiet":""}" id="all">Shuffle all ${all.length}</button><button class="btn quiet" id="reset">Reset my progress</button></section>`;
+    bindClose();
+    if(known<all.length)$("#learn").onclick=()=>{newDeck(true);renderCards()};
+    $("#all").onclick=()=>{newDeck(false);renderCards()};
+    $("#reset").onclick=()=>{all.forEach(c=>delete saved.known[c[1]]);persist();newDeck(false);renderCards()};
+    return;
+  }
+  const c=CARDS[f.ids[f.i]];
+  app.innerHTML=head(lname(st.lesson),`Card ${f.i+1} of ${f.ids.length}`,f.i/f.ids.length*100)+
+  `<section class="screen ${fresh?"enter":""}"><button class="card" id="card" aria-live="polite">${f.flip
+    ?`<span class="side">${esc(c[1])} · ${ltag(c[0])}</span><span class="big">${esc(c[2])}</span><span class="ex"><b>Example:</b> ${esc(c[3])}</span>`
+    :`<span class="side">${ltag(c[0])}</span><span class="term">${esc(c[1])}</span><span class="ex">Say the definition and an example out loud, then tap.</span>`}</button>
+   ${f.flip?`<div class="pair"><button class="btn bad" id="no">Still learning</button><button class="btn good" id="yes">Got it</button></div>`:`<button class="btn" id="flip">Show answer</button>`}</section>`;
+  bindClose();
+  const flip=()=>{f.flip=!f.flip;renderCards(false)};
+  $("#card").onclick=flip;
+  if(f.flip){
+    $("#no").onclick=()=>{delete saved.known[c[1]];persist();f.i++;f.flip=false;renderCards()};
+    $("#yes").onclick=()=>{saved.known[c[1]]=1;persist();f.i++;f.flip=false;renderCards()};
+  }else $("#flip").onclick=flip;
+}
+
+/* Notes */
+const PYR=`<figure><div class="pyr" role="img" aria-label="Energy pyramid from Model 1">
+ <div class="prow"><div class="blk" style="width:22%">Hawk<br>24 kcal</div><div class="tr">↑ 5% passed on</div></div>
+ <div class="prow"><div class="blk" style="width:40%">Blue jays<br>470 kcal</div><div class="tr">↑ 12% passed on</div></div>
+ <div class="prow"><div class="blk" style="width:62%">Caterpillars<br>4,000 kcal</div><div class="tr">↑ 16% passed on</div></div>
+ <div class="prow"><div class="blk" style="width:84%">Oak tree leaves<br>25,500 kcal</div><div class="tr">↑ less than 1% of sunlight absorbed</div></div>
+ <div class="prow sunrow"><div class="blk" style="width:100%">Sunlight hitting Earth's surface: 3,190,000 kcal</div></div>
+</div><figcaption>Model 1, per square metre per year. Block widths are not to scale. The three transfers average about 11%, close to the 10% rule. The hawk ends up with roughly 0.1% of the energy the oak leaves absorbed.</figcaption></figure>`;
+const SYM=`<div class="tw"><table><thead><tr><th>Relationship</th><th>Signs</th><th>What happens</th><th>Example</th></tr></thead><tbody>
+<tr><td>Mutualism</td><td class="sg">+ / +</td><td>Both benefit</td><td>Termite and gut bacteria</td></tr>
+<tr><td>Commensalism</td><td class="sg">+ / 0</td><td>One benefits, the other is unaffected</td><td>Remora and shark</td></tr>
+<tr><td>Parasitism</td><td class="sg">− / +</td><td>One benefits at the other's expense</td><td>Tapeworm and human</td></tr>
+<tr><td>Predation</td><td class="sg">− / +</td><td>One consumes the other</td><td>Wolf and elk</td></tr>
+<tr><td>Competition</td><td class="sg">− / −</td><td>Both want the same resource</td><td>Elk and bison</td></tr></tbody></table></div>`;
+const WQ=`<div class="tw"><table><thead><tr><th>Characteristic</th><th>Why it matters</th><th>How to measure</th></tr></thead><tbody>
+<tr><td>Temperature</td><td>Changes water's density and its ability to support life and absorb gases</td><td>Thermometer under 10 cm of water for 5 min</td></tr>
+<tr><td>Water clarity</td><td>How far sunlight can reach</td><td>Lower a Secchi disk until it disappears</td></tr>
+<tr><td>Conductivity</td><td>Shows if a pollution event happened</td><td>Digital probe with an electrical pulse</td></tr>
+<tr><td>pH</td><td>How available nutrients are, and whether heavy metals dissolve</td><td>pH strip or probe</td></tr>
+<tr><td>Dissolved oxygen</td><td>Fish and plants depend on it</td><td>Test kit or probe</td></tr></tbody></table></div>`;
+const EXTRA={1:PYR,2:SYM,5:WQ};
+function renderNotes(){
+  let h=head(lname(st.lesson),"Notes",null)+'<div class="enter">';
+  for(let n=1;n<=9;n++){ if(!inL(n))continue;
+    const terms=CARDS.filter(c=>c[0]===n);
+    h+=`<section class="lesson"><div class="num">${ltag(n)}</div><h1 class="big">${esc(lname(n))}</h1>
+    <ul>${NOTES[n].map(p=>`<li>${p}</li>`).join("")}</ul>${EXTRA[n]||""}
+    <details><summary>Key terms (${terms.length})</summary><dl>${terms.map(c=>`<div><dt>${esc(c[1])}</dt><dd>${esc(c[2])} <i>e.g. ${esc(c[3])}</i></dd></div>`).join("")}</dl></details></section>`;
+  }
+  h+=`<p class="note" style="margin-top:24px">Built from the class notes and the unit glossary. Answers to worksheet questions were worked out for study and are not the teacher's answer key.</p></div>`;
+  app.innerHTML=h;bindClose();
+}
+render();
+</script>
+
+</html>
